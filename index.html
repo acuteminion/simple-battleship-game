@@ -1,0 +1,107 @@
+<script>
+  class BattleshipsGame {
+    constructor() {
+        this.boardSize = 10;
+        this.numBattleships = 1;
+        this.numDestroyers = 2;
+        this.shipSizes = {'Battleship': 5, 'Destroyer': 4};
+        this.board = Array.from({ length: this.boardSize }, () => Array(this.boardSize).fill(' '));
+        this.ships = [];
+    }
+
+    placeShip(shipSize) {
+        const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+        let x, y;
+        if (direction === 'horizontal') {
+            x = Math.floor(Math.random() * (this.boardSize - shipSize + 1));
+            y = Math.floor(Math.random() * this.boardSize);
+            for (let i = 0; i < shipSize; i++) {
+                if (this.board[y][x + i] !== ' ') {
+                    return false;
+                }
+            }
+            for (let i = 0; i < shipSize; i++) {
+                this.board[y][x + i] = 'O';
+                this.ships.push([x + i, y]);
+            }
+        } else {
+            x = Math.floor(Math.random() * this.boardSize);
+            y = Math.floor(Math.random() * (this.boardSize - shipSize + 1));
+            for (let i = 0; i < shipSize; i++) {
+                if (this.board[y + i][x] !== ' ') {
+                    return false;
+                }
+            }
+            for (let i = 0; i < shipSize; i++) {
+                this.board[y + i][x] = 'O';
+                this.ships.push([x, y + i]);
+            }
+        }
+        return true;
+    }
+
+    placeShips() {
+        for (const [shipType, shipSize] of Object.entries(this.shipSizes)) {
+            for (let i = 0; i < (shipType === 'Battleship' ? this.numBattleships : this.numDestroyers); i++) {
+                let placed = false;
+                while (!placed) {
+                    placed = this.placeShip(shipSize);
+                }
+            }
+        }
+    }
+
+    displayBoard(showShips = false) {
+        console.log("  A B C D E F G H I J");
+        for (let i = 0; i < this.boardSize; i++) {
+            let row = this.board[i].join(' ');
+            console.log(`${i} ${row}`);
+
+            if (showShips) {
+                console.log(`${i} ${this.board[i].map((cell, j) => this.ships.some(([x, y]) => x === j && y === i) ? 'X' : ' ').join(' ')}`);
+            }
+        }
+    }
+
+    checkShot(x, y) {
+        if (this.board[y][x] === 'O') {
+            this.board[y][x] = 'X';
+            const index = this.ships.findIndex(([shipX, shipY]) => shipX === x && shipY === y);
+            this.ships.splice(index, 1);
+            if (this.ships.length === 0) {
+                return 'sunk';
+            }
+            return 'hit';
+        } else if (this.board[y][x] === ' ') {
+            this.board[y][x] = '.';
+            return 'miss';
+        } else {
+            return 'duplicate';
+        }
+    }
+
+    play() {
+        this.placeShips();
+        while (true) {
+            this.displayBoard();
+            const guess = prompt("Enter coordinates to target (e.g. A5): ");
+            const x = guess.charCodeAt(0) - 'A'.charCodeAt(0);
+            const y = parseInt(guess.substring(1));
+            const result = this.checkShot(x, y);
+            if (result === 'sunk') {
+                console.log("Congratulations! You sunk all the ships.");
+                break;
+            } else if (result === 'hit') {
+                console.log("Hit!");
+            } else if (result === 'miss') {
+                console.log("Miss.");
+            } else if (result === 'duplicate') {
+                console.log("You've already targeted this location.");
+            }
+        }
+    }
+}
+
+const game = new BattleshipsGame();
+game.play();
+</script>
